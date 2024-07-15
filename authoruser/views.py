@@ -29,7 +29,7 @@ class PatientRegistration(APIView):
             print('token: ',token)
             uid= urlsafe_base64_encode(force_bytes(user.pk))
             print('uid: ',uid)
-            confirm_link=f"http://127.0.0.1:8000/authore/active/{uid}/{token}/"
+            confirm_link=f"https://api-phitbook.onrender.com/authore/active/{uid}/{token}/"
             print('confirm link: ',confirm_link)
             
             email_subject='Confirm Your Account'
