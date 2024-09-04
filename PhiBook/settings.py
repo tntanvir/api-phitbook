@@ -30,7 +30,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = ["https://api-smartcare.onrender.com","https://*.127.0.0.1"]
+CSRF_TRUSTED_ORIGINS = ["https://api-phitbook.onrender.com","https://*.127.0.0.1"]
 
 
 

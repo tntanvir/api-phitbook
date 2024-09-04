@@ -6,26 +6,41 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django. http import Http404 
+from django.contrib.auth.models import User
 # Create your views here.
 
 
 class AllPostView(APIView):
     def get(self, request, format=None):
         user_id = request.query_params.get('user_id')
+        username = request.query_params.get('username')
         # print('user_id: ', user_id)
         category = request.query_params.get('category')
+        filter_image_null = request.query_params.get('image_null')
+        filter_video_not_null = request.query_params.get('video_not_null')
         if user_id:
             posts = Post.objects.filter(user=user_id)
             print('user_id: ', user_id)
             print(posts)
             serializer = AllPost(posts, many=True)
             return Response(serializer.data)
-        if category:
+        elif username:
+            try:
+                user_instance = User.objects.get(username=username)
+                posts = Post.objects.filter(user=user_instance)
+                serializer = AllPost(posts, many=True)  # Serialize the posts
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except User.DoesNotExist:
+                return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        elif category:
             posts = Post.objects.filter(category=category)
             serializer = AllPost(posts, many=True)
             return Response(serializer.data)
         else:
             posts = Post.objects.all()
+
+            if filter_image_null and filter_video_not_null:
+                posts = posts.filter(image__isnull=True).exclude(video__isnull=True)
             serializer = AllPost(posts, many=True)
             return Response(serializer.data)
 

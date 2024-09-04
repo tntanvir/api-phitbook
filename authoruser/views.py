@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from rest_framework import viewsets,filters
+from django.shortcuts import get_object_or_404
 # email
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -29,7 +30,7 @@ class PatientRegistration(APIView):
             print('token: ',token)
             uid= urlsafe_base64_encode(force_bytes(user.pk))
             print('uid: ',uid)
-            confirm_link=f"http://127.0.0.1:8000/authore/active/{uid}/{token}/"
+            confirm_link=f"https://api-phitbook.onrender.com/authore/active/{uid}/{token}/"
             print('confirm link: ',confirm_link)
             
             email_subject='Confirm Your Account'
@@ -85,9 +86,17 @@ class AllUserView(APIView):
     serializer_class = Alluser
     def get(self, request):
         user_id = request.query_params.get('user_id')
+        username = request.query_params.get('username')
         if user_id:
             try:
                 user = UserModel.objects.get(user=user_id)
+                serializer = Alluser(user)
+            except UserModel.DoesNotExist:
+                return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        elif username:
+            try:
+                user_instance = User.objects.get(username=username)
+                user = UserModel.objects.get(user=user_instance)
                 serializer = Alluser(user)
             except UserModel.DoesNotExist:
                 return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -112,12 +121,44 @@ class AllUserView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class MainUserView(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class=MainUser
+# class MainUserView(viewsets.ModelViewSet):
+#     queryset = User.objects.all()
+#     serializer_class=MainUser
 
 
+class MainUserView(APIView):
+    def get(self, request, pk=None):
+        username = request.query_params.get('username')
+        if pk:
+            user = get_object_or_404(User, pk=pk)
+            serializer = MainUser(user)
+        elif username:
+            user = get_object_or_404(User, username=username)
+            serializer = MainUser(user)
+        else:
+            users = User.objects.all()
+            serializer = MainUser(users, many=True)
+        return Response(serializer.data)
 
+    def post(self, request):
+        serializer = MainUser(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        serializer = MainUser(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
     

@@ -7,6 +7,7 @@ from category.models import Category
 class Post(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE)
     image=models.URLField(blank=True,null=True,max_length=500)
+    video=models.URLField(blank=True,null=True,max_length=500)
     title=models.CharField(max_length=100,unique=True)
     discription=models.TextField()
     publication_date=models.DateTimeField(auto_now_add=True)
