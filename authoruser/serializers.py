@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from .models import UserModel
+from .models import UserModel,Follow
 from django.contrib.auth.models import User
      
 
@@ -71,4 +71,48 @@ class MainUser(serializers.ModelSerializer):
 
 
 
-        
+
+class FollowSerializer(serializers.ModelSerializer):
+    follower = serializers.SerializerMethodField()
+    following = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Follow
+        fields = ['follower', 'following', 'created_at']
+
+    def get_follower(self, obj):
+        # Merge MainUser and Alluser data into a single dictionary
+        main_user_data = MainUser(obj.follower).data
+        all_user_data = Alluser(obj.follower.usermodel).data
+        return {**main_user_data, **all_user_data}
+
+    def get_following(self, obj):
+        # Merge MainUser and Alluser data into a single dictionary
+        main_user_data = MainUser(obj.following).data
+        all_user_data = Alluser(obj.following.usermodel).data
+        return {**main_user_data, **all_user_data}
+
+class FollowersSerializer(serializers.ModelSerializer):
+    follower = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Follow
+        fields = ['follower', 'created_at']
+
+    def get_follower(self, obj):
+        main_user_data = MainUser(obj.follower).data
+        all_user_data = Alluser(obj.follower.usermodel).data
+        return {**main_user_data, **all_user_data}
+
+class FollowingSerializer(serializers.ModelSerializer):
+    following = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Follow
+        fields = ['following', 'created_at']
+
+    def get_following(self, obj):
+        # Merge MainUser and Alluser data into a single dictionary
+        main_user_data = MainUser(obj.following).data
+        all_user_data = Alluser(obj.following.usermodel).data
+        return {**main_user_data, **all_user_data}

@@ -1,9 +1,9 @@
 from django.shortcuts import render
-from .serializers import UserRegister,loginSerializer,Alluser,MainUser
+from .serializers import UserRegister,loginSerializer,Alluser,MainUser,FollowSerializer,FollowersSerializer,FollowingSerializer
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
 from django.contrib.auth import login,logout,authenticate
-from .models import UserModel
+from .models import UserModel,Follow
 
 from rest_framework.views import APIView
 from django.contrib.auth.tokens import default_token_generator
@@ -70,7 +70,7 @@ class UserLogin(APIView):
             if user:
                 token,_=Token.objects.get_or_create(user=user)
                 login(request, user)
-                return Response({'token':token.key,'id':user.id})
+                return Response({'token':token.key,'id':user.id,'user':user.username})
             else:
                 return Response('Invalid credentials',status=status.HTTP_401_UNAUTHORIZED)
         return Response(serializer.errors)
@@ -161,4 +161,69 @@ class MainUserView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+
+
+class FollowUserView(APIView):
+    def post(self, request, username):
+        try:
+            # Get the user to be followed
+            user_to_follow = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Get the current logged-in user
+        current_user = request.user
+        
+        # Check if the current user is already following the target user
+        follow_obj, created = Follow.objects.get_or_create(follower=current_user, following=user_to_follow)
+
+        if created:
+            # If the follow relationship was created, return a success message
+            return Response(
+                {'message': f'You have successfully followed {user_to_follow.username}!'},
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            # If the follow relationship already exists, unfollow the user and return a message
+            follow_obj.delete()
+            return Response(
+                {'message': f'You have successfully unfollowed {user_to_follow.username}.'},
+                status=status.HTTP_200_OK
+            )
+class FollowersView(APIView):
+    def get(self, request, username):
+        # Get the user whose followers you want to retrieve by username
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Get all users who follow the target user
+        followers = Follow.objects.filter(following=user)
+        serializer = FollowersSerializer(followers, many=True)
+        return Response(serializer.data)
+
+class FollowingView(APIView):
+    def get(self, request, username):
+        # Get the user whose following list you want to retrieve by username
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Get all users the target user is following
+        following = Follow.objects.filter(follower=user)
+        serializer = FollowingSerializer(following, many=True)
+        return Response(serializer.data)
     
+
+class FollowStatusAPIView(APIView):
+
+
+    def get(self, request, username):
+        try:
+            target_user = User.objects.get(username=username)
+            is_following = Follow.objects.filter(follower=request.user, following=target_user).exists()
+            return Response({'is_following': is_following}, status=200)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)

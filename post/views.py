@@ -182,3 +182,11 @@ class LikeView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class FollowingPostsAPIView(APIView):
+
+    def get(self, request, format=None):
+        user = request.user
+        following_users = user.following.all().values_list('following', flat=True)
+        posts = Post.objects.filter(user__in=following_users)
+        serializer = AllPost(posts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
