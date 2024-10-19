@@ -20,3 +20,5 @@ sqlparse
 typing_extensions
 tzdata
 virtualenv
+whitenoise
+psycopg2-binary
