@@ -28,9 +28,9 @@ SECRET_KEY = 'django-insecure-jsl0mhz46gw!xyo8a^&!ez=%fpcfhd0gxdcaazzzqm==e(hzcg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app']
 
-CSRF_TRUSTED_ORIGINS = ["https://api-phitbook.onrender.com","https://*.127.0.0.1"]
+CSRF_TRUSTED_ORIGINS = True
 
 
 
@@ -86,7 +86,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'PhiBook.wsgi.application'
+WSGI_APPLICATION = 'PhiBook.wsgi.app'
 
 
 # Database
@@ -157,6 +157,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT=BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
